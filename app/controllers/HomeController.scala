@@ -4,7 +4,7 @@ import javax.inject._
 
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import dao.SecretInfoDao
-import domains.{ResponseStatus, SecretDetail}
+import domains.{RelationSecretItem, ResponseStatus, SecretDetail}
 import models._
 import play.api.mvc._
 import play.api.libs.json._
@@ -93,4 +93,33 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
       case record => Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> record))
     }
   }
+
+  def addItem() = Action.async(BodyParsers.parse.json) { request => {
+    val ItemInfoResult = request.body.validate[ItemInfo]
+    ItemInfoResult.fold(
+      errors => {
+        Future.successful(BadRequest(Json.obj("status" -> "KO", "message" -> JsError.toJson(errors))))
+      },
+      itemInfo => {
+        secretInfoDao.saveItemInfo(itemInfo).map(a => Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> itemInfo)))
+      }
+    )
+  }
+  }
+
+  def appendItem() = Action.async(BodyParsers.parse.json) { request => {
+    val relationSecretItem = request.body.validate[RelationSecretItem]
+    relationSecretItem.fold(
+      errors => {
+        Future.successful(BadRequest(Json.obj("status" -> "KO", "message" -> JsError.toJson(errors))))
+      },
+      itemInfo => {
+        secretInfoDao.appendItem(itemInfo)
+        secretInfoDao.queryDetailById(itemInfo.secretId).map(i => {
+          Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> i))
+        })
+      }
+    )
+  }
+ }
 }

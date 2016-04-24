@@ -2,7 +2,7 @@ package dao
 
 import javax.inject.Inject
 
-import domains.{ResponseStatus, SecretDetail}
+import domains.{RelationSecretItem, ResponseStatus, SecretDetail}
 import domains.SecretDetail._
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.driver.JdbcProfile
@@ -105,9 +105,26 @@ class SecretInfoDao @Inject()(protected val dbConfigProvider: DatabaseConfigProv
   /** t_secret_item */
   def allSecretItmes(): Future[Seq[SecretItem]] = db.run(secretItems.result)
 
-  def querySecretItmeById(id: Int): Future[Option[SecretItem]] = db.run(secretItems.filter(_.id === id).result.headOption)
-
-  def saveSecretItme(secretItem: SecretItem): Future[Int] = db.run(secretItems += secretItem)
+  def querySecretItemById(id: Int): Future[Option[SecretItem]] = db.run(secretItems.filter(_.id === id).result.headOption)
+  def saveOrUpdateSecretItem(secretItem: SecretItem): Future[Int] = {
+    val secretId = secretItem.secretId
+    val itemId = secretItem.itemId
+    db.run(secretItems.filter(_.secretId === secretId).filter(_.itemId === itemId).result.headOption).map {
+      case None => {
+        // save
+        db.run(secretItems += secretItem)
+        1
+      }
+      case result => {
+        // update
+        val q = for {
+        c <- secretItems if c.id === result.get.id
+        } yield c.itemContent
+        db.run[Int](q.update(secretItem.itemContent))
+        1
+      }
+    }
+  }
 
   def allDetails: Future[Seq[SecretDetail]] = {
     val q = for {
@@ -122,15 +139,34 @@ class SecretInfoDao @Inject()(protected val dbConfigProvider: DatabaseConfigProv
     })
   }
 
-  def queryDetailById(id: Int): Future[SecretDetail] = {
+  def queryDetailById(id: Int): Future[Seq[SecretDetail]] = {
     val q = for {
-      si <- secretItems
-      s <- secretInfos if s.id === si.id
-      i <- itemInfos if i.id === si.id && i.id === id
+      s <- secretInfos
+      i <- itemInfos
+      si <- secretItems if s.id === si.secretId && i.id === si.itemId && s.id === id
     } yield (s.id, s.title, i.itemName, i.itemDesc, i.securityLevel, si.itemContent)
-    db.run(q.result.headOption) map {
-      case None => null
-      case i => SecretDetail.apply _ tupled i.get
+    db.run(q.result) map {
+      case j => j.map(jj => {
+        SecretDetail.apply _ tupled jj
+      })
     }
   }
+
+  def appendItem(relationSecretItem: RelationSecretItem): Future[Int] = {
+    val secretId = relationSecretItem.secretId
+    db.run(secretInfos.filter(_.id === secretId).result.headOption).map {
+      case None => -1
+      case secretInfo => {
+        val itemId = relationSecretItem.itemId
+        db.run(itemInfos.filter(_.id === itemId).result.headOption).map {
+          case None => -1
+          case itemInfo => {
+            saveOrUpdateSecretItem(SecretItem(Option.empty[Int], Option(secretId), Option(itemId), Option(relationSecretItem.itemContent)))
+          }
+        }
+        1
+      }
+    }
+  }
+
 }

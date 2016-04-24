@@ -25,3 +25,7 @@ GET    /classify/:id                controllers.HomeController.classify(id: Int)
 
 GET    /details                controllers.HomeController.details
 GET    /detail/:id                controllers.HomeController.detail(id: Int)
+
+POST    /addItem                controllers.HomeController.addItem
+
+POST    /appendItem                controllers.HomeController.appendItem
