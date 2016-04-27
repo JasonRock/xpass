@@ -106,22 +106,22 @@ class SecretInfoDao @Inject()(protected val dbConfigProvider: DatabaseConfigProv
   def allSecretItmes(): Future[Seq[SecretItem]] = db.run(secretItems.result)
 
   def querySecretItemById(id: Int): Future[Option[SecretItem]] = db.run(secretItems.filter(_.id === id).result.headOption)
+
   def saveOrUpdateSecretItem(secretItem: SecretItem): Future[Int] = {
     val secretId = secretItem.secretId
     val itemId = secretItem.itemId
-    db.run(secretItems.filter(_.secretId === secretId).filter(_.itemId === itemId).result.headOption).map {
+
+    db.run(secretItems.filter(_.secretId === secretId).filter(_.itemId === itemId).result.headOption).flatMap {
       case None => {
         // save
         db.run(secretItems += secretItem)
-        1
       }
       case result => {
         // update
         val q = for {
-        c <- secretItems if c.id === result.get.id
+          c <- secretItems if c.id === result.get.id
         } yield c.itemContent
-        db.run[Int](q.update(secretItem.itemContent))
-        1
+        db.run(q.update(secretItem.itemContent))
       }
     }
   }
