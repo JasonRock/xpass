@@ -121,5 +121,17 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
       }
     )
   }
- }
+  }
+
+  import org.apache.commons.codec.binary.Base64
+  import utils.crypto.{DES, AES}
+
+  def test() = Action(BodyParsers.parse.json) { request => {
+    val relationSecretItem = request.body.validate[RelationSecretItem]
+    val itemContent = relationSecretItem.get.itemContent
+    println("itemContent:" + itemContent)
+    val res = new String(DES.decrypt(Base64.decodeBase64(itemContent), "01234567"))
+    Ok(Json.obj("status" -> ResponseStatus.success(), "src" -> itemContent, "res" -> res))
+  }
+  }
 }
