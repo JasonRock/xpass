@@ -4,8 +4,9 @@ import javax.inject._
 
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import dao.SecretInfoDao
-import domains.{RelationSecretItem, ResponseStatus, SecretDetail}
+import domains._
 import models._
+import org.apache.commons.codec.binary.Base64
 import play.api.mvc._
 import play.api.libs.json._
 
@@ -31,14 +32,14 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
   def infos = Action.async {
 
     secretInfoDao.all().map(records => {
-      Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> records))
+      Ok(TransportResponse.info(Option(Json.toJson(records).toString())).toJson)
     })
   }
 
   def info(id: Int) = Action.async {
     secretInfoDao.queryById(id).map {
-      case None => Ok(Json.obj("status" -> ResponseStatus.error(500, "No Results")))
-      case record => Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> record))
+      case None => Ok(TransportResponse.error(500, "No Results").toJson)
+      case record => Ok(TransportResponse.info(Option(Json.toJson(record).toString())).toJson)
     }
   }
 
@@ -49,7 +50,10 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
         Future.successful(BadRequest(Json.obj("status" -> "KO", "message" -> JsError.toJson(errors))))
       },
       secretInfo => {
-        secretInfoDao.save(secretInfo).map(a => Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> secretInfo)))
+        secretInfoDao.save(secretInfo).map(a => {
+          Ok(Json.toJson(TransportResponse.info(Option(Json.toJson(secretInfo).toString()))))
+//          Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> secretInfo))
+        })
       }
     )
   }
@@ -57,40 +61,37 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
 
   def items = Action.async {
     secretInfoDao.allItems().map(records => {
-      Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> records))
+      val encrypt = TransportResponse.info(Option(Json.toJson(records).toString()))
+      Ok(Json.toJson(encrypt))
     })
   }
 
   def item(id: Int) = Action.async {
     secretInfoDao.queryItemById(id).map {
-      case None => Ok(Json.obj("status" -> ResponseStatus.error(500, "No Results")))
-      case record => Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> record))
+      case None => Ok(Json.toJson(TransportResponse.error(500, "No Results")))
+      case record => Ok(Json.toJson(TransportResponse.info(Option(Json.toJson(record).toString()))))
     }
   }
 
   def classifies = Action.async {
-    secretInfoDao.allClassifies().map(records => {
-      Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> records))
-    })
+    secretInfoDao.allClassifies().map { records => Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> records)) }
   }
 
   def classify(id: Int) = Action.async {
     secretInfoDao.queryClassifyById(id).map {
-      case None => Ok(Json.obj("status" -> ResponseStatus.error(500, "No Results")))
-      case record => Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> record))
+      case None => Ok(Json.toJson(TransportResponse.error(500, "No Results")))
+      case record => Ok(Json.toJson(TransportResponse.info(Option(Json.toJson(record).toString()))))
     }
   }
 
   def details = Action.async {
-    secretInfoDao.allDetails.map(records => {
-      Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> records))
-    })
+    secretInfoDao.allDetails.map { records => Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> records)) }
   }
 
   def detail(id: Int) = Action.async {
     secretInfoDao.queryDetailById(id).map {
-      case null => Ok(Json.obj("status" -> ResponseStatus.error(500, "No Results")))
-      case record => Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> record))
+      case null => Ok(Json.toJson(TransportResponse.error(500, "No Results")))
+      case record => Ok(Json.toJson(TransportResponse.info(Option(Json.toJson(record).toString()))))
     }
   }
 
@@ -101,7 +102,7 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
         Future.successful(BadRequest(Json.obj("status" -> "KO", "message" -> JsError.toJson(errors))))
       },
       itemInfo => {
-        secretInfoDao.saveItemInfo(itemInfo).map(a => Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> itemInfo)))
+        secretInfoDao.saveItemInfo(itemInfo).map(_ => Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> itemInfo)))
       }
     )
   }
@@ -115,23 +116,33 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
       },
       itemInfo => {
         secretInfoDao.appendItem(itemInfo)
-        secretInfoDao.queryDetailById(itemInfo.secretId).map(i => {
-          Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> i))
-        })
+        secretInfoDao.queryDetailById(itemInfo.secretId).map { i => Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> i)) }
       }
     )
   }
   }
 
-  import org.apache.commons.codec.binary.Base64
   import utils.crypto.{DES, AES}
+  import utils.protocol.defaults._
 
-  def test() = Action(BodyParsers.parse.json) { request => {
-    val relationSecretItem = request.body.validate[RelationSecretItem]
-    val itemContent = relationSecretItem.get.itemContent
-    println("itemContent:" + itemContent)
-    val res = new String(DES.decrypt(Base64.decodeBase64(itemContent), "01234567"))
-    Ok(Json.obj("status" -> ResponseStatus.success(), "src" -> itemContent, "res" -> res))
+  def encrypt() = Action(BodyParsers.parse.json) { request => {
+    val encryptStr = Base64.encodeBase64String(AES.encrypt(request.body.toString(), "0123456789012345"))
+    Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> encryptStr))
   }
+  }
+
+  def decrypt() = Action(BodyParsers.parse.json) { request => {
+    val transportRequest = request.body.validate[TransportRequest]
+    transportRequest.fold(
+      errors => {
+        BadRequest(Json.obj("status" -> "KO", "message" -> "aaa"))
+      },
+      info => {
+        val parse = Json.parse(info.info.get)
+        Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> parse))
+      }
+    )
+  }
+
   }
 }
