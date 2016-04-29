@@ -49,7 +49,7 @@ object TransportResponse {
     info match {
       case error if error == Option.empty => new TransportResponse(status, Option.empty)
       case _ => {
-        val encrypted: String = encodeBase64(AES.encrypt(info.getOrElse("").getBytes, "0123456789012345"))
+        val encrypted: String = encodeBase64(AES.encrypt(info.get.getBytes, "0123456789012345"))
         new TransportResponse(status, Option(encrypted))
       }
     }
@@ -58,8 +58,15 @@ object TransportResponse {
 
   def unapply(arg: TransportResponse): Option[(ResponseStatus, Option[String])] = Option(arg.status, arg.info)
 
-  def info(info: Option[String]) = {
-    TransportResponse(ResponseStatus(200, "success"), info)
+  def info(info: String) = {
+    info match {
+      case i if i == null => TransportResponse(ResponseStatus(200, "success"), Option.empty)
+      case _ => TransportResponse(ResponseStatus(200, "success"), Option(info))
+    }
+  }
+
+  def info[T](o: T)(implicit tjs: Writes[T]): TransportResponse = {
+    info(Json.toJson(o).toString())
   }
 
   def error(code: Int, message: String) = {

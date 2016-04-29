@@ -32,14 +32,14 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
   def infos = Action.async {
 
     secretInfoDao.all().map(records => {
-      Ok(TransportResponse.info(Option(Json.toJson(records).toString())).toJson)
+      Ok(TransportResponse.info(records).toJson)
     })
   }
 
   def info(id: Int) = Action.async {
     secretInfoDao.queryById(id).map {
       case None => Ok(TransportResponse.error(500, "No Results").toJson)
-      case record => Ok(TransportResponse.info(Option(Json.toJson(record).toString())).toJson)
+      case record => Ok(TransportResponse.info(record).toJson)
     }
   }
 
@@ -51,7 +51,7 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
       },
       secretInfo => {
         secretInfoDao.save(secretInfo).map(a => {
-          Ok(Json.toJson(TransportResponse.info(Option(Json.toJson(secretInfo).toString()))))
+          Ok(TransportResponse.info(secretInfo).toJson)
 //          Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> secretInfo))
         })
       }
@@ -61,37 +61,36 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
 
   def items = Action.async {
     secretInfoDao.allItems().map(records => {
-      val encrypt = TransportResponse.info(Option(Json.toJson(records).toString()))
-      Ok(Json.toJson(encrypt))
+      Ok(TransportResponse.info(records).toJson)
     })
   }
 
   def item(id: Int) = Action.async {
     secretInfoDao.queryItemById(id).map {
-      case None => Ok(Json.toJson(TransportResponse.error(500, "No Results")))
-      case record => Ok(Json.toJson(TransportResponse.info(Option(Json.toJson(record).toString()))))
+      case None => Ok(TransportResponse.error(500, "No Results").toJson)
+      case record => Ok(TransportResponse.info(record).toJson)
     }
   }
 
   def classifies = Action.async {
-    secretInfoDao.allClassifies().map { records => Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> records)) }
+    secretInfoDao.allClassifies().map { records => Ok(TransportResponse.info(records).toJson) }
   }
 
   def classify(id: Int) = Action.async {
     secretInfoDao.queryClassifyById(id).map {
-      case None => Ok(Json.toJson(TransportResponse.error(500, "No Results")))
-      case record => Ok(Json.toJson(TransportResponse.info(Option(Json.toJson(record).toString()))))
+      case None => Ok(TransportResponse.error(500, "No Results").toJson)
+      case record => Ok(TransportResponse.info(record).toJson)
     }
   }
 
   def details = Action.async {
-    secretInfoDao.allDetails.map { records => Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> records)) }
+    secretInfoDao.allDetails.map { records => Ok(TransportResponse.info(records).toJson) }
   }
 
   def detail(id: Int) = Action.async {
     secretInfoDao.queryDetailById(id).map {
-      case null => Ok(Json.toJson(TransportResponse.error(500, "No Results")))
-      case record => Ok(Json.toJson(TransportResponse.info(Option(Json.toJson(record).toString()))))
+      case null => Ok(TransportResponse.error(500, "No Results").toJson)
+      case record => Ok(TransportResponse.info(record).toJson)
     }
   }
 
