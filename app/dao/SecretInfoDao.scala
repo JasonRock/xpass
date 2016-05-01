@@ -12,6 +12,8 @@ import scala.concurrent.Future
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
 
+import scala.collection.Traversable
+
 /**
   * Created by js.lee on 4/20/16.
   */
@@ -92,6 +94,12 @@ class SecretInfoDao @Inject()(protected val dbConfigProvider: DatabaseConfigProv
   def allItems(): Future[Seq[ItemInfo]] = db.run(itemInfos.result)
 
   def queryItemById(id: Int): Future[Option[ItemInfo]] = db.run(itemInfos.filter(_.id === id).result.headOption)
+
+  def queryRemainItems(secretId: Int): Future[Seq[ItemInfo]] = {
+    db.run(secretItems.filter(_.secretId === secretId).result).flatMap(result => {
+      db.run(itemInfos.filterNot(_.id inSet result.map(_.itemId.getOrElse(0))).result)
+    })
+  }
 
   def saveItemInfo(itemInfo: ItemInfo): Future[Int] = db.run(itemInfos += itemInfo)
 

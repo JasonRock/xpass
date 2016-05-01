@@ -20,6 +20,9 @@ POST    /addSecretInfo                controllers.HomeController.addSecretInfo
 GET    /items                controllers.HomeController.items
 GET    /item/:id                controllers.HomeController.item(id: Int)
 
+# Get items that could append a certain secret info
+GET    /remainItems/:secretId                controllers.HomeController.remainItems(secretId: Int)
+
 GET    /classifies               controllers.HomeController.classifies
 GET    /classify/:id                controllers.HomeController.classify(id: Int)
 

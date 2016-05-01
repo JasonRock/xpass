@@ -72,6 +72,12 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
     }
   }
 
+  def remainItems(secretId: Int) = Action.async {
+    secretInfoDao.queryRemainItems(secretId).map {
+      case record => Ok(TransportResponse.info(record).toJson)
+    }
+  }
+
   def classifies = Action.async {
     secretInfoDao.allClassifies().map { records => Ok(TransportResponse.info(records).toJson) }
   }
