@@ -19,16 +19,6 @@ import scala.concurrent.Future
 @Singleton
 class HomeController @Inject()(secretInfoDao: SecretInfoDao) extends Controller {
 
-  /**
-    * Create an Action to render an HTML page with a welcome message.
-    * The configuration in the `routes` file means that this method
-    * will be called when the application receives a `GET` request with
-    * a path of `/`.
-    */
-  def index = Action {
-    Ok(views.html.index("Your new application is ready.js.lee"))
-  }
-
   def infos = Action.async {
 
     secretInfoDao.all().map(records => {

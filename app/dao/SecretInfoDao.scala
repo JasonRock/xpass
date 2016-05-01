@@ -162,17 +162,16 @@ class SecretInfoDao @Inject()(protected val dbConfigProvider: DatabaseConfigProv
 
   def appendItem(relationSecretItem: RelationSecretItem): Future[Int] = {
     val secretId = relationSecretItem.secretId
-    db.run(secretInfos.filter(_.id === secretId).result.headOption).map {
-      case None => -1
+    db.run(secretInfos.filter(_.id === secretId).result.headOption).flatMap {
+      case None => Future(-1)
       case secretInfo => {
         val itemId = relationSecretItem.itemId
-        db.run(itemInfos.filter(_.id === itemId).result.headOption).map {
-          case None => -1
+        db.run(itemInfos.filter(_.id === itemId).result.headOption).flatMap {
+          case None => Future(-1)
           case itemInfo => {
             saveOrUpdateSecretItem(SecretItem(Option.empty[Int], Option(secretId), Option(itemId), Option(relationSecretItem.itemContent)))
           }
         }
-        1
       }
     }
   }
