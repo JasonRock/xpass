@@ -72,6 +72,4 @@ object TransportResponse {
   def error(code: Int, message: String) = {
     TransportResponse(ResponseStatus(code, message), Option.empty)
   }
-
-
 }

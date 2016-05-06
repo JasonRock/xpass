@@ -5,9 +5,6 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.{Reads, Writes, _}
 import utils.crypto.{AES, DES}
 
-import scala.Option.empty
-
-
 /**
   * Created by js.lee on 4/29/16.
   */

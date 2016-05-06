@@ -1,22 +1,14 @@
-# Display a client
-GET    /infos                controllers.HomeController.infos
-GET    /info/:id                controllers.HomeController.info(id: Int)
-POST    /addSecretInfo                controllers.HomeController.addSecretInfo
-
-GET    /items                controllers.HomeController.items
-GET    /item/:id                controllers.HomeController.item(id: Int)
-
-# Get items that could append a certain secret info
-GET    /remainItems/:secretId                controllers.HomeController.remainItems(secretId: Int)
-
-GET    /classifies               controllers.HomeController.classifies
-GET    /classify/:id                controllers.HomeController.classify(id: Int)
-
-GET    /details                controllers.HomeController.details
-GET    /detail/:id                controllers.HomeController.detail(id: Int)
-
-POST    /addItem                controllers.HomeController.addItem
-
-POST    /appendItem                controllers.HomeController.appendItem
-POST    /encrypt                controllers.HomeController.encrypt
-POST    /decrypt                controllers.HomeController.decrypt
+GET     /infos                       controllers.HomeController.infos
+GET     /info/:id                    controllers.HomeController.info(id: Int)
+POST    /addSecretInfo               controllers.HomeController.addSecretInfo
+GET     /items                       controllers.HomeController.items
+GET     /item/:id                    controllers.HomeController.item(id: Int)
+GET     /remainItems/:secretId       controllers.HomeController.remainItems(secretId: Int)
+GET     /classifies                  controllers.HomeController.classifies
+GET     /classify/:id                controllers.HomeController.classify(id: Int)
+GET     /details                     controllers.HomeController.details
+GET     /detail/:id                  controllers.HomeController.detail(id: Int)
+POST    /addItem                     controllers.HomeController.addItem
+POST    /appendItem                  controllers.HomeController.appendItem
+POST    /encrypt                     controllers.HomeController.encrypt
+POST    /decrypt                     controllers.HomeController.decrypt

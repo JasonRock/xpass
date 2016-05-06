@@ -1,10 +1,10 @@
 package models
 
-import play.api.libs.json.{Json, _}
+import play.api.libs.json._
 import play.api.libs.json.Writes._
 import play.api.libs.functional.syntax._
 
-case class SecretInfo(id: Option[Int], title: Option[String], classify: Option[Int], description: Option[String], createTime: Option[String], updateTime: Option[String])
+case class SecretInfo(var id: Option[Int], var title: Option[String], var classify: Option[Int], var description: Option[String], var createTime: Option[String], var updateTime: Option[String])
 
 object SecretInfo {
 

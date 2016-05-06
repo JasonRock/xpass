@@ -3,7 +3,7 @@ package controllers
 import javax.inject._
 
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import dao.SecretInfoDao
+import dao.{ClassifyInfoDao, ItemInfoDao, SecretInfoDao, SecretItemDao}
 import domains._
 import models._
 import org.apache.commons.codec.binary.Base64
@@ -17,7 +17,8 @@ import scala.concurrent.Future
   * application's home page.
   */
 @Singleton
-class HomeController @Inject()(secretInfoDao: SecretInfoDao) extends Controller {
+class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemInfoDao,
+                               classifyInfoDao: ClassifyInfoDao, secretItemDao: SecretItemDao) extends Controller {
 
   def infos = Action.async {
 
@@ -50,13 +51,13 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
   }
 
   def items = Action.async {
-    secretInfoDao.allItems().map(records => {
+    itemInfoDao.allItems().map(records => {
       Ok(TransportResponse.info(records).toJson)
     })
   }
 
   def item(id: Int) = Action.async {
-    secretInfoDao.queryItemById(id).map {
+    itemInfoDao.queryItemById(id).map {
       case None => Ok(TransportResponse.error(500, "No Results").toJson)
       case record => Ok(TransportResponse.info(record).toJson)
     }
@@ -69,11 +70,11 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
   }
 
   def classifies = Action.async {
-    secretInfoDao.allClassifies().map { records => Ok(TransportResponse.info(records).toJson) }
+    classifyInfoDao.allClassifies().map { records => Ok(TransportResponse.info(records).toJson) }
   }
 
   def classify(id: Int) = Action.async {
-    secretInfoDao.queryClassifyById(id).map {
+    classifyInfoDao.queryClassifyById(id).map {
       case None => Ok(TransportResponse.error(500, "No Results").toJson)
       case record => Ok(TransportResponse.info(record).toJson)
     }
@@ -97,7 +98,7 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
         Future.successful(BadRequest(Json.obj("status" -> "KO", "message" -> JsError.toJson(errors))))
       },
       itemInfo => {
-        secretInfoDao.saveItemInfo(itemInfo).map(_ => Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> itemInfo)))
+        itemInfoDao.saveItemInfo(itemInfo).map(_ => Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> itemInfo)))
       }
     )
   }
