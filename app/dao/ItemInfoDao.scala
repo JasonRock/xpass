@@ -18,7 +18,6 @@ class ItemInfoDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvid
 
   import driver.api._
 
-  /** t_item_info */
   def allItems(): Future[Seq[ItemInfo]] = {
     db.run(itemInfos.result)
   }

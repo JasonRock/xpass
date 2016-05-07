@@ -18,7 +18,6 @@ class SecretItemDao @Inject()(protected val dbConfigProvider: DatabaseConfigProv
 
   import driver.api._
 
-  /** t_secret_item */
   def allSecretItmes(): Future[Seq[SecretItem]] = db.run(secretItems.result)
 
   def querySecretItemById(id: Int): Future[Option[SecretItem]] = db.run(secretItems.filter(_.id === id).result.headOption)
