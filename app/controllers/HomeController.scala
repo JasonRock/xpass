@@ -6,8 +6,11 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import dao.{ClassifyInfoDao, ItemInfoDao, SecretInfoDao, SecretItemDao}
 import domains._
 import models._
+import org.apache.commons.codec.binary.Base64
 import play.api.mvc._
 import play.api.libs.json._
+import utils.RSA
+import utils.crypto.AES
 
 import scala.concurrent.Future
 
@@ -26,10 +29,19 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     * @return
     */
   def infos = Action.async {
+    request => {
+      val requestInfo: (String, String) = request.body.asText.orNull match {
+        case null => (null, null)
+        case body : String => {
+          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+          ((content \ "publicKey").get.toString(), null)
+        }
+      }
 
-    secretInfoDao.all().map(records => {
-      Ok(TransportResponse.info(records).toJson)
-    })
+      secretInfoDao.all().map(records => {
+        Ok(TransportResponse.info(records, requestInfo._1).toJson)
+      })
+    }
   }
 
   /**
@@ -38,9 +50,21 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     * @return
     */
   def info(id: Int) = Action.async {
-    secretInfoDao.queryById(id).map {
-      case None => Ok(TransportResponse.error(500, "No Results").toJson)
-      case record => Ok(TransportResponse.info(record).toJson)
+    request => {
+      val requestInfo: (String, JsValue) = request.body.asText.orNull match {
+        case null => (null, null)
+        case body : String => {
+          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+          ((content \ "publicKey").get.toString(), (content \ "content").get)
+        }
+      }
+
+      val idTmp = Base64.encodeBase64String(RSA.decryptByPublicKey(requestInfo._1.getBytes, requestInfo._2.toString()))
+
+      secretInfoDao.queryById(id).map {
+        case None => Ok(TransportResponse.error(500, "No Results").toJson)
+        case record => Ok(TransportResponse.info(record, requestInfo._1).toJson)
+      }
     }
   }
 
@@ -58,7 +82,6 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
       secretInfo => {
         secretInfoDao.save(secretInfo).map(a => {
           Ok(TransportResponse.info(secretInfo).toJson)
-          //          Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> secretInfo))
         })
       }
     )

@@ -1,4 +1,4 @@
-GET     /infos                       controllers.HomeController.infos
+POST    /infos                       controllers.HomeController.infos
 GET     /info/:id                    controllers.HomeController.info(id: Int)
 POST    /addSecretInfo               controllers.HomeController.addSecretInfo
 GET     /items                       controllers.HomeController.items
@@ -10,5 +10,5 @@ GET     /details                     controllers.HomeController.details
 GET     /detail/:id                  controllers.HomeController.detail(id: Int)
 POST    /addItem                     controllers.HomeController.addItem
 POST    /appendItem                  controllers.HomeController.appendItem
-POST    /encrypt                     controllers.HomeController.encrypt
-POST    /decrypt                     controllers.HomeController.decrypt
+POST    /encrypt                     controllers.EncryptController.encrypt
+POST    /decrypt                     controllers.EncryptController.decrypt

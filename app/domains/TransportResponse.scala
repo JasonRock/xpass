@@ -3,7 +3,7 @@ package domains
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Json, Writes, _}
 import org.apache.commons.codec.binary.Base64
-import utils.crypto.{DES, AES}
+import utils.RSA
 
 /**
   * Created by js.lee on 4/29/16.
@@ -27,7 +27,14 @@ object ResponseStatus {
 }
 
 class TransportResponse(val status: ResponseStatus, val info: Option[String]) {
+  def encodeBase64(bytes: Array[Byte]) = Base64.encodeBase64String(bytes)
+
   def toJson: JsValue = Json.toJson(this)
+
+  def encrypt(publicKey: String): TransportResponse = {
+    val encrypted: String = encodeBase64(RSA.encryptByPublicKey(this.info.getOrElse("").getBytes, publicKey))
+    TransportResponse(this.status, Option(encrypted))
+  }
 }
 
 object TransportResponse {
@@ -43,30 +50,26 @@ object TransportResponse {
     ) (unlift(TransportResponse.unapply))
 
 
-  def encodeBase64(bytes: Array[Byte]) = Base64.encodeBase64String(bytes)
-
   def apply(status: ResponseStatus, info: Option[String]): TransportResponse = {
     info match {
       case error if error == Option.empty => new TransportResponse(status, Option.empty)
       case _ => {
-        val encrypted: String = encodeBase64(AES.encrypt(info.get.getBytes, "0123456789012345"))
-        new TransportResponse(status, Option(encrypted))
+        new TransportResponse(status, info)
       }
     }
-
   }
 
   def unapply(arg: TransportResponse): Option[(ResponseStatus, Option[String])] = Option(arg.status, arg.info)
 
-  def info(info: String) = {
+  def info(info: String, publicKey: String) = {
     info match {
       case i if i == null => TransportResponse(ResponseStatus(200, "success"), Option.empty)
-      case _ => TransportResponse(ResponseStatus(200, "success"), Option(info))
+      case _ => TransportResponse(ResponseStatus(200, "success"), Option(info)).encrypt(publicKey)
     }
   }
 
-  def info[T](o: T)(implicit tjs: Writes[T]): TransportResponse = {
-    info(Json.toJson(o).toString())
+  def info[T](o: T, publicKey: String)(implicit tjs: Writes[T]): TransportResponse = {
+    info(Json.toJson(o).toString(), publicKey)
   }
 
   def error(code: Int, message: String) = {
