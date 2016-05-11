@@ -120,8 +120,8 @@ object RSA {
     var key: Key = null
     val cipher: Cipher = keyFlag match {
       case 1 => {
-        val x509KeySpec: X509EncodedKeySpec = new X509EncodedKeySpec(keyBytes)
-        key = keyFactory.generatePublic(x509KeySpec)
+        val pkcs8KeySpec: PKCS8EncodedKeySpec = new PKCS8EncodedKeySpec(keyBytes)
+        key = keyFactory.generatePrivate(pkcs8KeySpec)
         Cipher.getInstance(keyFactory.getAlgorithm)
       }
       case 2 => {
@@ -154,13 +154,13 @@ object RSA {
 
   private def encrypt(data: Array[Byte], keyStr: String, keyFlag: Int): Array[Byte] = {
     val keyBytes: Array[Byte] = Base64.decodeBase64(keyStr)
-    val pkcs8KeySpec: PKCS8EncodedKeySpec = new PKCS8EncodedKeySpec(keyBytes)
+
     val keyFactory: KeyFactory = KeyFactory.getInstance(KEY_ALGORITHM)
     var key: Key = null
     val cipher: Cipher = keyFlag match {
       case 1 => {
-        val x509KeySpec: X509EncodedKeySpec = new X509EncodedKeySpec(keyBytes)
-        key = keyFactory.generatePublic(x509KeySpec)
+        val pkcs8KeySpec: PKCS8EncodedKeySpec = new PKCS8EncodedKeySpec(keyBytes)
+        key = keyFactory.generatePrivate(pkcs8KeySpec)
         Cipher.getInstance(keyFactory.getAlgorithm)
       }
       case 2 => {

@@ -4,7 +4,7 @@ import javax.inject._
 
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import dao.{ClassifyInfoDao, ItemInfoDao, SecretInfoDao, SecretItemDao}
-import domains._
+import domains.{RelationSecretItem, _}
 import models._
 import org.apache.commons.codec.binary.Base64
 import play.api.mvc._
@@ -32,7 +32,7 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     request => {
       val requestInfo: (String, String) = request.body.asText.orNull match {
         case null => (null, null)
-        case body : String => {
+        case body: String => {
           val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
           ((content \ "publicKey").get.toString(), null)
         }
@@ -53,7 +53,7 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     request => {
       val requestInfo: (String, JsValue) = request.body.asText.orNull match {
         case null => (null, null)
-        case body : String => {
+        case body: String => {
           val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
           ((content \ "publicKey").get.toString(), (content \ "content").get)
         }
@@ -73,19 +73,29 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     *
     * @return
     */
-  def addSecretInfo() = Action.async(BodyParsers.parse.json) { request => {
-    val SecretInfoResult = request.body.validate[SecretInfo]
-    SecretInfoResult.fold(
-      errors => {
-        Future.successful(BadRequest(Json.obj("status" -> "KO", "message" -> JsError.toJson(errors))))
-      },
-      secretInfo => {
-        secretInfoDao.save(secretInfo).map(a => {
-          Ok(TransportResponse.info(secretInfo).toJson)
-        })
+  def addSecretInfo() = Action.async {
+    request => {
+      val requestInfo: (String, JsValue) = request.body.asText.orNull match {
+        case null => (null, null)
+        case body: String => {
+          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+          ((content \ "publicKey").get.toString(), (content \ "content").get)
+        }
       }
-    )
-  }
+
+      val secretInfo = Json.parse(Base64.encodeBase64String(RSA.decryptByPublicKey(requestInfo._1.getBytes, requestInfo._2.toString())))
+      val SecretInfoResult = secretInfo.validate[SecretInfo]
+      SecretInfoResult.fold(
+        errors => {
+          Future.successful(BadRequest(Json.obj("status" -> "KO", "message" -> JsError.toJson(errors))))
+        },
+        secretInfo => {
+          secretInfoDao.save(secretInfo).map(a => {
+            Ok(TransportResponse.info(secretInfo, requestInfo._1).toJson)
+          })
+        }
+      )
+    }
   }
 
   /**
@@ -94,9 +104,19 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     * @return
     */
   def items = Action.async {
-    itemInfoDao.allItems().map(records => {
-      Ok(TransportResponse.info(records).toJson)
-    })
+    request => {
+      val requestInfo: (String, String) = request.body.asText.orNull match {
+        case null => (null, null)
+        case body: String => {
+          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+          ((content \ "publicKey").get.toString(), null)
+        }
+      }
+
+      itemInfoDao.allItems().map(records => {
+        Ok(TransportResponse.info(records, requestInfo._1).toJson)
+      })
+    }
   }
 
   /**
@@ -105,9 +125,21 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     * @return
     */
   def item(id: Int) = Action.async {
-    itemInfoDao.queryItemById(id).map {
-      case None => Ok(TransportResponse.error(500, "No Results").toJson)
-      case record => Ok(TransportResponse.info(record).toJson)
+    request => {
+      val requestInfo: (String, JsValue) = request.body.asText.orNull match {
+        case null => (null, null)
+        case body: String => {
+          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+          ((content \ "publicKey").get.toString(), (content \ "content").get)
+        }
+      }
+
+      val idTmp = Base64.encodeBase64String(RSA.decryptByPublicKey(requestInfo._1.getBytes, requestInfo._2.toString()))
+
+      itemInfoDao.queryItemById(id).map {
+        case None => Ok(TransportResponse.error(500, "No Results").toJson)
+        case record => Ok(TransportResponse.info(record, requestInfo._1).toJson)
+      }
     }
   }
 
@@ -117,8 +149,20 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     * @return
     */
   def remainItems(secretId: Int) = Action.async {
-    secretInfoDao.queryRemainItems(secretId).map {
-      case record => Ok(TransportResponse.info(record).toJson)
+    request => {
+      val requestInfo: (String, JsValue) = request.body.asText.orNull match {
+        case null => (null, null)
+        case body: String => {
+          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+          ((content \ "publicKey").get.toString(), (content \ "content").get)
+        }
+      }
+
+      val idTmp = Base64.encodeBase64String(RSA.decryptByPublicKey(requestInfo._1.getBytes, requestInfo._2.toString()))
+
+      secretInfoDao.queryRemainItems(secretId).map {
+        case record => Ok(TransportResponse.info(record, requestInfo._1).toJson)
+      }
     }
   }
 
@@ -128,7 +172,16 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     * @return
     */
   def classifies = Action.async {
-    classifyInfoDao.allClassifies().map { records => Ok(TransportResponse.info(records).toJson) }
+    request => {
+      val requestInfo: (String, JsValue) = request.body.asText.orNull match {
+        case null => (null, null)
+        case body: String => {
+          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+          ((content \ "publicKey").get.toString(), null)
+        }
+      }
+      classifyInfoDao.allClassifies().map { records => Ok(TransportResponse.info(records, requestInfo._1).toJson) }
+    }
   }
 
   /**
@@ -137,9 +190,21 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     * @return
     */
   def classify(id: Int) = Action.async {
-    classifyInfoDao.queryClassifyById(id).map {
-      case None => Ok(TransportResponse.error(500, "No Results").toJson)
-      case record => Ok(TransportResponse.info(record).toJson)
+    request => {
+      val requestInfo: (String, JsValue) = request.body.asText.orNull match {
+        case null => (null, null)
+        case body: String => {
+          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+          ((content \ "publicKey").get.toString(), (content \ "content").get)
+        }
+      }
+
+      val idTmp = Base64.encodeBase64String(RSA.decryptByPublicKey(requestInfo._1.getBytes, requestInfo._2.toString()))
+
+      classifyInfoDao.queryClassifyById(id).map {
+        case None => Ok(TransportResponse.error(500, "No Results").toJson)
+        case record => Ok(TransportResponse.info(record, requestInfo._1).toJson)
+      }
     }
   }
 
@@ -149,7 +214,16 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     * @return
     */
   def details = Action.async {
-    secretInfoDao.allDetails.map { records => Ok(TransportResponse.info(records).toJson) }
+    request => {
+      val requestInfo: (String, JsValue) = request.body.asText.orNull match {
+        case null => (null, null)
+        case body: String => {
+          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+          ((content \ "publicKey").get.toString(), null)
+        }
+      }
+      secretInfoDao.allDetails.map { records => Ok(TransportResponse.info(records, requestInfo._1).toJson) }
+    }
   }
 
   /**
@@ -158,9 +232,21 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     * @return
     */
   def detail(id: Int) = Action.async {
-    secretInfoDao.queryDetailById(id).map {
-      case null => Ok(TransportResponse.error(500, "No Results").toJson)
-      case record => Ok(TransportResponse.info(record).toJson)
+    request => {
+      val requestInfo: (String, JsValue) = request.body.asText.orNull match {
+        case null => (null, null)
+        case body: String => {
+          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+          ((content \ "publicKey").get.toString(), (content \ "content").get)
+        }
+      }
+
+      val idTmp = Base64.encodeBase64String(RSA.decryptByPublicKey(requestInfo._1.getBytes, requestInfo._2.toString()))
+
+      secretInfoDao.queryDetailById(id).map {
+        case null => Ok(TransportResponse.error(500, "No Results").toJson)
+        case record => Ok(TransportResponse.info(record, requestInfo._1).toJson)
+      }
     }
   }
 
@@ -169,17 +255,28 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     *
     * @return
     */
-  def addItem() = Action.async(BodyParsers.parse.json) { request => {
-    val ItemInfoResult = request.body.validate[ItemInfo]
-    ItemInfoResult.fold(
-      errors => {
-        Future.successful(BadRequest(Json.obj("status" -> "KO", "message" -> JsError.toJson(errors))))
-      },
-      itemInfo => {
-        itemInfoDao.saveItemInfo(itemInfo).map(_ => Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> itemInfo)))
+  def addItem() = Action.async {
+    request => {
+      val requestInfo: (String, JsValue) = request.body.asText.orNull match {
+        case null => (null, null)
+        case body: String => {
+          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+          ((content \ "publicKey").get.toString(), (content \ "content").get)
+        }
       }
-    )
-  }
+
+      val itemInfo = Json.parse(Base64.encodeBase64String(RSA.decryptByPublicKey(requestInfo._1.getBytes, requestInfo._2.toString())))
+
+      val ItemInfoResult = itemInfo.validate[ItemInfo]
+      ItemInfoResult.fold(
+        errors => {
+          Future.successful(BadRequest(Json.obj("status" -> "KO", "message" -> JsError.toJson(errors))))
+        },
+        itemInfo => {
+          itemInfoDao.saveItemInfo(itemInfo).map(_ => Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> itemInfo)))
+        }
+      )
+    }
   }
 
   /**
@@ -188,18 +285,29 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     *
     * @return
     */
-  def appendItem() = Action.async(BodyParsers.parse.json) { request => {
-    val relationSecretItem = request.body.validate[RelationSecretItem]
-    relationSecretItem.fold(
-      errors => {
-        Future.successful(BadRequest(Json.obj("status" -> "KO", "message" -> JsError.toJson(errors))))
-      },
-      itemInfo => {
-        secretInfoDao.appendItem(itemInfo)
-        secretInfoDao.queryDetailById(itemInfo.secretId).map { i => Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> i)) }
+  def appendItem() = Action.async {
+    request => {
+      val requestInfo: (String, JsValue) = request.body.asText.orNull match {
+        case null => (null, null)
+        case body: String => {
+          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+          ((content \ "publicKey").get.toString(), (content \ "content").get)
+        }
       }
-    )
-  }
+
+      val relationSecretItem = Json.parse(Base64.encodeBase64String(RSA.decryptByPublicKey(requestInfo._1.getBytes, requestInfo._2.toString())))
+
+      val relationSecretItemResult = relationSecretItem.validate[RelationSecretItem]
+      relationSecretItemResult.fold(
+        errors => {
+          Future.successful(BadRequest(Json.obj("status" -> "KO", "message" -> JsError.toJson(errors))))
+        },
+        itemInfo => {
+          secretInfoDao.appendItem(itemInfo)
+          secretInfoDao.queryDetailById(itemInfo.secretId).map { i => Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> i)) }
+        }
+      )
+    }
   }
 
 }
