@@ -15,6 +15,8 @@ libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.36",
   "com.typesafe.slick" % "slick_2.11" % "2.1.0",
   "commons-codec" % "commons-codec" % "1.6"
+//  "ch.qos.logback" %  "logback-classic" % "1.1.7",
+//  "com.typesafe.scala-logging" %% "scala-logging" % "3.4.0"
 )
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"

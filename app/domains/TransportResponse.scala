@@ -33,6 +33,8 @@ class TransportResponse(val status: ResponseStatus, val info: Option[String]) {
 
   def encrypt(publicKey: String): TransportResponse = {
     val encrypted: String = encodeBase64(RSA.encryptByPublicKey(this.info.getOrElse("").getBytes, publicKey))
+    println("info: " + info)
+    println("encrypted: " + encrypted)
     TransportResponse(this.status, Option(encrypted))
   }
 }
@@ -53,9 +55,7 @@ object TransportResponse {
   def apply(status: ResponseStatus, info: Option[String]): TransportResponse = {
     info match {
       case error if error == Option.empty => new TransportResponse(status, Option.empty)
-      case _ => {
-        new TransportResponse(status, info)
-      }
+      case _ => new TransportResponse(status, info)
     }
   }
 

@@ -32,12 +32,12 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     request => {
       val requestInfo: (String, String) = request.body.asText.orNull match {
         case null => (null, null)
-        case body: String => {
-          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+        case body: String =>
+          val content: JsValue = Json.parse(new String(AES.decrypt(Base64.decodeBase64(body), "0123456789012345")))
           ((content \ "publicKey").get.toString(), null)
-        }
       }
 
+      println("publicKey: " + requestInfo._1)
       secretInfoDao.all().map(records => {
         Ok(TransportResponse.info(records, requestInfo._1).toJson)
       })
@@ -53,10 +53,9 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     request => {
       val requestInfo: (String, JsValue) = request.body.asText.orNull match {
         case null => (null, null)
-        case body: String => {
-          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+        case body: String =>
+          val content: JsValue = Json.parse(new String(AES.decrypt(Base64.decodeBase64(body), "0123456789012345")))
           ((content \ "publicKey").get.toString(), (content \ "content").get)
-        }
       }
 
       val idTmp = Base64.encodeBase64String(RSA.decryptByPublicKey(requestInfo._1.getBytes, requestInfo._2.toString()))
@@ -77,13 +76,12 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     request => {
       val requestInfo: (String, JsValue) = request.body.asText.orNull match {
         case null => (null, null)
-        case body: String => {
-          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+        case body: String =>
+          val content: JsValue = Json.parse(new String(AES.decrypt(Base64.decodeBase64(body), "0123456789012345")))
           ((content \ "publicKey").get.toString(), (content \ "content").get)
-        }
       }
 
-      val secretInfo = Json.parse(Base64.encodeBase64String(RSA.decryptByPublicKey(requestInfo._1.getBytes, requestInfo._2.toString())))
+      val secretInfo = Json.parse(new String(RSA.decryptByPublicKey(requestInfo._1.getBytes, requestInfo._2.toString())))
       val SecretInfoResult = secretInfo.validate[SecretInfo]
       SecretInfoResult.fold(
         errors => {
@@ -107,10 +105,9 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     request => {
       val requestInfo: (String, String) = request.body.asText.orNull match {
         case null => (null, null)
-        case body: String => {
-          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+        case body: String =>
+          val content: JsValue = Json.parse(new String(AES.decrypt(Base64.decodeBase64(body), "0123456789012345")))
           ((content \ "publicKey").get.toString(), null)
-        }
       }
 
       itemInfoDao.allItems().map(records => {
@@ -128,10 +125,9 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     request => {
       val requestInfo: (String, JsValue) = request.body.asText.orNull match {
         case null => (null, null)
-        case body: String => {
-          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+        case body: String =>
+          val content: JsValue = Json.parse(new String(AES.decrypt(Base64.decodeBase64(body), "0123456789012345")))
           ((content \ "publicKey").get.toString(), (content \ "content").get)
-        }
       }
 
       val idTmp = Base64.encodeBase64String(RSA.decryptByPublicKey(requestInfo._1.getBytes, requestInfo._2.toString()))
@@ -152,10 +148,9 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     request => {
       val requestInfo: (String, JsValue) = request.body.asText.orNull match {
         case null => (null, null)
-        case body: String => {
-          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+        case body: String =>
+          val content: JsValue = Json.parse(new String(AES.decrypt(Base64.decodeBase64(body), "0123456789012345")))
           ((content \ "publicKey").get.toString(), (content \ "content").get)
-        }
       }
 
       val idTmp = Base64.encodeBase64String(RSA.decryptByPublicKey(requestInfo._1.getBytes, requestInfo._2.toString()))
@@ -175,10 +170,9 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     request => {
       val requestInfo: (String, JsValue) = request.body.asText.orNull match {
         case null => (null, null)
-        case body: String => {
-          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+        case body: String =>
+          val content: JsValue = Json.parse(new String(AES.decrypt(Base64.decodeBase64(body), "0123456789012345")))
           ((content \ "publicKey").get.toString(), null)
-        }
       }
       classifyInfoDao.allClassifies().map { records => Ok(TransportResponse.info(records, requestInfo._1).toJson) }
     }
@@ -193,10 +187,9 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     request => {
       val requestInfo: (String, JsValue) = request.body.asText.orNull match {
         case null => (null, null)
-        case body: String => {
-          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+        case body: String =>
+          val content: JsValue = Json.parse(new String(AES.decrypt(Base64.decodeBase64(body), "0123456789012345")))
           ((content \ "publicKey").get.toString(), (content \ "content").get)
-        }
       }
 
       val idTmp = Base64.encodeBase64String(RSA.decryptByPublicKey(requestInfo._1.getBytes, requestInfo._2.toString()))
@@ -217,10 +210,9 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     request => {
       val requestInfo: (String, JsValue) = request.body.asText.orNull match {
         case null => (null, null)
-        case body: String => {
-          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+        case body: String =>
+          val content: JsValue = Json.parse(new String(AES.decrypt(Base64.decodeBase64(body), "0123456789012345")))
           ((content \ "publicKey").get.toString(), null)
-        }
       }
       secretInfoDao.allDetails.map { records => Ok(TransportResponse.info(records, requestInfo._1).toJson) }
     }
@@ -235,10 +227,9 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     request => {
       val requestInfo: (String, JsValue) = request.body.asText.orNull match {
         case null => (null, null)
-        case body: String => {
-          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+        case body: String =>
+          val content: JsValue = Json.parse(new String(AES.decrypt(Base64.decodeBase64(body), "0123456789012345")))
           ((content \ "publicKey").get.toString(), (content \ "content").get)
-        }
       }
 
       val idTmp = Base64.encodeBase64String(RSA.decryptByPublicKey(requestInfo._1.getBytes, requestInfo._2.toString()))
@@ -259,13 +250,12 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     request => {
       val requestInfo: (String, JsValue) = request.body.asText.orNull match {
         case null => (null, null)
-        case body: String => {
-          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+        case body: String =>
+          val content: JsValue = Json.parse(new String(AES.decrypt(Base64.decodeBase64(body), "0123456789012345")))
           ((content \ "publicKey").get.toString(), (content \ "content").get)
-        }
       }
 
-      val itemInfo = Json.parse(Base64.encodeBase64String(RSA.decryptByPublicKey(requestInfo._1.getBytes, requestInfo._2.toString())))
+      val itemInfo = Json.parse(new String(RSA.decryptByPublicKey(requestInfo._1.getBytes, requestInfo._2.toString())))
 
       val ItemInfoResult = itemInfo.validate[ItemInfo]
       ItemInfoResult.fold(
@@ -289,13 +279,12 @@ class HomeController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     request => {
       val requestInfo: (String, JsValue) = request.body.asText.orNull match {
         case null => (null, null)
-        case body: String => {
-          val content: JsValue = Json.parse(Base64.encodeBase64String(AES.decrypt(body.getBytes(), "0123456789012345")))
+        case body: String =>
+          val content: JsValue = Json.parse(new String(AES.decrypt(Base64.decodeBase64(body), "0123456789012345")))
           ((content \ "publicKey").get.toString(), (content \ "content").get)
-        }
       }
 
-      val relationSecretItem = Json.parse(Base64.encodeBase64String(RSA.decryptByPublicKey(requestInfo._1.getBytes, requestInfo._2.toString())))
+      val relationSecretItem = Json.parse(new String(RSA.decryptByPublicKey(requestInfo._1.getBytes, requestInfo._2.toString())))
 
       val relationSecretItemResult = relationSecretItem.validate[RelationSecretItem]
       relationSecretItemResult.fold(
