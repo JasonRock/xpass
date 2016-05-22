@@ -33,8 +33,6 @@ class TransportResponse(val status: ResponseStatus, val info: Option[String]) {
 
   def encrypt(publicKey: String): TransportResponse = {
     val encrypted: String = encodeBase64(RSA.encryptByPublicKey(this.info.getOrElse("").getBytes, publicKey))
-    println("info: " + info)
-    println("encrypted: " + encrypted)
     TransportResponse(this.status, Option(encrypted))
   }
 }
