@@ -2,7 +2,6 @@ package controllers
 
 import javax.inject._
 
-import dao.{ClassifyInfoDao, ItemInfoDao, SecretInfoDao, SecretItemDao}
 import domains._
 import org.apache.commons.codec.binary.Base64
 import play.api.libs.json._
@@ -14,8 +13,7 @@ import play.api.mvc._
   * @author js.ee
   */
 @Singleton
-class EncryptController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemInfoDao,
-                                  classifyInfoDao: ClassifyInfoDao, secretItemDao: SecretItemDao) extends Controller {
+class EncryptController @Inject()() extends Controller {
 
   import utils.crypto.AES
   import utils.protocol.defaults._
@@ -25,10 +23,11 @@ class EncryptController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: Ite
     *
     * @return
     */
-  def encrypt() = Action(BodyParsers.parse.json) { request => {
-    val encryptStr = Base64.encodeBase64String(AES.encrypt(request.body.toString(), "0123456789012345"))
-    Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> encryptStr))
-  }
+  def encrypt() = Action(BodyParsers.parse.json) {
+    request => {
+      val encryptStr = Base64.encodeBase64String(AES.encrypt(request.body.toString(), AES.AES_KEY))
+      Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> encryptStr))
+    }
   }
 
   /**
@@ -36,17 +35,18 @@ class EncryptController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: Ite
     *
     * @return
     */
-  def decrypt() = Action(BodyParsers.parse.json) { request => {
-    val transportRequest = request.body.validate[TransportRequest]
-    transportRequest.fold(
-      errors => {
-        BadRequest(Json.obj("status" -> "KO", "message" -> "aaa"))
-      },
-      info => {
-        val parse = Json.parse(info.info.get)
-        Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> parse))
-      }
-    )
-  }
+  def decrypt() = Action(BodyParsers.parse.json) {
+    request => {
+      val transportRequest = request.body.validate[TransportRequest]
+      transportRequest.fold(
+        errors => {
+          BadRequest(Json.obj("status" -> "KO", "message" -> "aaa"))
+        },
+        info => {
+          val parse = Json.parse(info.info.get)
+          Ok(Json.obj("status" -> ResponseStatus.success(), "info" -> parse))
+        }
+      )
+    }
   }
 }

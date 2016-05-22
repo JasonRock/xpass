@@ -1,14 +1,17 @@
-POST    /infos                       controllers.HomeController.infos
-GET     /info/:id                    controllers.HomeController.info(id: Int)
-POST    /addSecretInfo               controllers.HomeController.addSecretInfo
-GET     /items                       controllers.HomeController.items
-GET     /item/:id                    controllers.HomeController.item(id: Int)
-GET     /remainItems/:secretId       controllers.HomeController.remainItems(secretId: Int)
-GET     /classifies                  controllers.HomeController.classifies
-GET     /classify/:id                controllers.HomeController.classify(id: Int)
-GET     /details                     controllers.HomeController.details
-GET     /detail/:id                  controllers.HomeController.detail(id: Int)
-POST    /addItem                     controllers.HomeController.addItem
-POST    /appendItem                  controllers.HomeController.appendItem
-POST    /encrypt                     controllers.EncryptController.encrypt
-POST    /decrypt                     controllers.EncryptController.decrypt
+POST     /infos                       controllers.InfoController.infos
+POST     /info                        controllers.InfoController.info
+POST     /addSecretInfo               controllers.InfoController.addSecretInfo
+POST     /details                     controllers.InfoController.details
+POST     /detail                      controllers.InfoController.detail
+
+POST     /items                       controllers.ItemController.items
+POST     /item                        controllers.ItemController.item
+POST     /remainItems                 controllers.ItemController.remainItems
+POST     /addItem                     controllers.ItemController.addItem
+POST     /appendItem                  controllers.ItemController.appendItem
+
+POST     /classifies                  controllers.ClassifyController.classifies
+POST     /classify                    controllers.ClassifyController.classify
+
+POST     /encrypt                     controllers.EncryptController.encrypt
+POST     /decrypt                     controllers.EncryptController.decrypt

@@ -41,8 +41,8 @@ package protocol {
 
 }
 
-
 package crypto {
+
   import protocol.Writes
   import javax.crypto.spec.SecretKeySpec
   import javax.crypto.Cipher
@@ -74,7 +74,10 @@ package crypto {
 
   object DES extends JavaCryptoEncryption("DES")
 
-  object AES extends JavaCryptoEncryption("AES")
+  object AES extends JavaCryptoEncryption("AES") {
+    val AES_KEY: String = "0123456789012345"
+  }
+
 }
 
 
