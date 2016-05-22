@@ -24,7 +24,7 @@ class ClassifyController @Inject()(classifyInfoDao: ClassifyInfoDao) extends Con
   def classifies = BaseAction.async {
     request => {
       classifyInfoDao.allClassifies().map {
-        records => Ok(TransportResponse.info(records, request.transportRequest.publicKey).toJson)
+        records => Ok(TransportResponse.info(records, request.getPublicKey).toJson)
       }
     }
   }
@@ -39,7 +39,7 @@ class ClassifyController @Inject()(classifyInfoDao: ClassifyInfoDao) extends Con
       val id = request.transportRequest.info.get
       classifyInfoDao.queryClassifyById(id.toInt).map {
         case None => Ok(TransportResponse.error(500, "No Results").toJson)
-        case record => Ok(TransportResponse.info(record, request.transportRequest.publicKey).toJson)
+        case record => Ok(TransportResponse.info(record, request.getPublicKey).toJson)
       }
     }
   }

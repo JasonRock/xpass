@@ -30,7 +30,7 @@ class ItemController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
   def items = BaseAction.async {
     request => {
       itemInfoDao.allItems().map(records => {
-        Ok(TransportResponse.info(records, request.transportRequest.publicKey).toJson)
+        Ok(TransportResponse.info(records, request.getPublicKey).toJson)
       })
     }
   }
@@ -42,10 +42,10 @@ class ItemController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     */
   def item() = BaseAction.async {
     request => {
-      val id = request.transportRequest.info.get
+      val id = request.getInfo.toString()
       itemInfoDao.queryItemById(id.toInt).map {
         case None => Ok(TransportResponse.error(500, "No Results").toJson)
-        case record => Ok(TransportResponse.info(record, request.transportRequest.publicKey).toJson)
+        case record => Ok(TransportResponse.info(record, request.getPublicKey).toJson)
       }
     }
   }
@@ -57,9 +57,9 @@ class ItemController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     */
   def remainItems = BaseAction.async {
     request => {
-      val secretId = request.transportRequest.info.get
+      val secretId = request.getInfo.toString()
       secretInfoDao.queryRemainItems(secretId.toInt).map {
-        case record => Ok(TransportResponse.info(record, request.transportRequest.publicKey).toJson)
+        case record => Ok(TransportResponse.info(record, request.getPublicKey).toJson)
       }
     }
   }
@@ -71,9 +71,7 @@ class ItemController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     */
   def addItem() = BaseAction.async {
     request => {
-      val itemInfo = Json.parse(request.transportRequest.info.get)
-
-      val ItemInfoResult = itemInfo.validate[ItemInfo]
+      val ItemInfoResult = request.getInfo.validate[ItemInfo]
       ItemInfoResult.fold(
         errors => {
           Future.successful(BadRequest(Json.obj("status" -> "KO", "message" -> JsError.toJson(errors))))
@@ -94,9 +92,7 @@ class ItemController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
   def appendItem() = BaseAction.async {
     request => {
 
-      val relationSecretItem = Json.parse(request.transportRequest.info.get)
-
-      val relationSecretItemResult = relationSecretItem.validate[RelationSecretItem]
+      val relationSecretItemResult = request.getInfo.validate[RelationSecretItem]
       relationSecretItemResult.fold(
         errors => {
           Logger.error(JsError.toJson(errors).toString())

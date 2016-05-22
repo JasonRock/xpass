@@ -29,7 +29,7 @@ class InfoController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
   def infos = BaseAction.async {
     request => {
       secretInfoDao.all().map(records => {
-        Ok(TransportResponse.info(records, request.transportRequest.publicKey).toJson)
+        Ok(TransportResponse.info(records, request.getPublicKey).toJson)
       })
     }
   }
@@ -41,10 +41,10 @@ class InfoController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
     */
   def info = BaseAction.async {
     request => {
-      val id = request.transportRequest.info.get
+      val id = request.getInfo.toString()
       secretInfoDao.queryById(id.toInt).map {
         case None => Ok(TransportResponse.error(500, "No Results").toJson)
-        case record => Ok(TransportResponse.info(record, request.transportRequest.publicKey).toJson)
+        case record => Ok(TransportResponse.info(record, request.getPublicKey).toJson)
       }
     }
   }
@@ -56,8 +56,7 @@ class InfoController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
     */
   def addSecretInfo() = BaseAction.async {
     request => {
-      val secretInfo = Json.parse(request.transportRequest.info.get)
-      val SecretInfoResult = secretInfo.validate[SecretInfo]
+      val SecretInfoResult = request.getInfo.validate[SecretInfo]
       SecretInfoResult.fold(
         errors => {
           Logger.error(JsError.toJson(errors).toString())
@@ -65,7 +64,7 @@ class InfoController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
         },
         secretInfo => {
           secretInfoDao.save(secretInfo).map(a => {
-            Ok(TransportResponse.info(secretInfo, request.transportRequest.publicKey).toJson)
+            Ok(TransportResponse.info(secretInfo, request.getPublicKey).toJson)
           })
         }
       )
@@ -80,7 +79,7 @@ class InfoController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
   def details = BaseAction.async {
     request => {
       secretInfoDao.allDetails.map {
-        records => Ok(TransportResponse.info(records, request.transportRequest.publicKey).toJson)
+        records => Ok(TransportResponse.info(records, request.getPublicKey).toJson)
       }
     }
   }
@@ -92,10 +91,10 @@ class InfoController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
     */
   def detail(id: Int) = BaseAction.async {
     request => {
-      val id = request.transportRequest.info.get
+      val id = request.getInfo.toString()
       secretInfoDao.queryDetailById(id.toInt).map {
         case null => Ok(TransportResponse.error(500, "No Results").toJson)
-        case record => Ok(TransportResponse.info(record, request.transportRequest.publicKey).toJson)
+        case record => Ok(TransportResponse.info(record, request.getPublicKey).toJson)
       }
     }
   }
