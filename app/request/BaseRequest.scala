@@ -13,7 +13,7 @@ class BaseRequest[A](val transportRequest: TransportRequest, request: Request[A]
   def getPublicKey = this.transportRequest.publicKey
 
   def getInfo: JsValue = this.transportRequest match {
-    case Option.empty => null
+    case null => null
     case _ => Json.toJson(this.transportRequest.info)
   }
 }
