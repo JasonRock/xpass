@@ -24,8 +24,10 @@ object BaseAction extends ActionBuilder[BaseRequest] {
         val content: JsValue = Json.parse(new String(AES.decrypt(Base64.decodeBase64(body.asText.orNull), AES.AES_KEY)))
 
         val publicKey: String = (content \ "publicKey").get.toString()
-        val encryptedInfo = (content \ "content").get
-        val info: String = new String(RSA.decryptByPublicKey(Base64.decodeBase64(encryptedInfo.toString()), publicKey))
+        val info: String = content \ "content" toOption match {
+          case None => null
+          case a =>  new String(RSA.decryptByPublicKey(Base64.decodeBase64(a.get.toString()), publicKey))
+        }
         TransportRequest(publicKey, Option(info))
     }
     new BaseRequest(transportRequest, request)

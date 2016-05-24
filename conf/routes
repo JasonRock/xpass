@@ -13,5 +13,7 @@ POST     /appendItem                  controllers.ItemController.appendItem
 POST     /classifies                  controllers.ClassifyController.classifies
 POST     /classify                    controllers.ClassifyController.classify
 
-POST     /encrypt                     controllers.EncryptController.encrypt
-POST     /decrypt                     controllers.EncryptController.decrypt
+POST     /AES/encrypt                 controllers.EncryptController.AESEncrypt
+POST     /AES/decrypt                 controllers.EncryptController.AESDecrypt
+POST     /RSA/encrypt                 controllers.EncryptController.RSAEncrypt
+POST     /RSA/decrypt                 controllers.EncryptController.RSADecrypt
