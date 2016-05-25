@@ -3,6 +3,7 @@ package domains
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Json, Writes, _}
 import org.apache.commons.codec.binary.Base64
+import play.api.Logger
 import utils.RSA
 
 /**
@@ -33,6 +34,7 @@ class TransportResponse(val status: ResponseStatus, val info: Option[String]) {
 
   def encrypt(publicKey: String): TransportResponse = {
     val encrypted: String = encodeBase64(RSA.encryptByPublicKey(this.info.getOrElse("").getBytes, publicKey))
+    Logger.debug("Response: " + encrypted)
     TransportResponse(this.status, Option(encrypted))
   }
 }
