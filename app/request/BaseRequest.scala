@@ -14,6 +14,6 @@ class BaseRequest[A](val transportRequest: TransportRequest, request: Request[A]
 
   def getInfo: JsValue = this.transportRequest match {
     case null => null
-    case _ => Json.toJson(this.transportRequest.info)
+    case _ => Json.parse(this.transportRequest.info.get)
   }
 }

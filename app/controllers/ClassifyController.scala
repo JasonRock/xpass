@@ -36,7 +36,7 @@ class ClassifyController @Inject()(classifyInfoDao: ClassifyInfoDao) extends Con
     */
   def classify = BaseAction.async {
     request => {
-      val id = request.transportRequest.info.get
+      val id = (request.getInfo \ "id").get.toString()
       classifyInfoDao.queryClassifyById(id.toInt).map {
         case None => Ok(TransportResponse.error(500, "No Results").toJson)
         case record => Ok(TransportResponse.info(record, request.getPublicKey).toJson)

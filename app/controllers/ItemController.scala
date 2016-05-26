@@ -42,7 +42,7 @@ class ItemController @Inject()(secretInfoDao: SecretInfoDao, itemInfoDao: ItemIn
     */
   def item() = BaseAction.async {
     request => {
-      val id = request.getInfo.toString()
+      val id = (request.getInfo \ "id").get.toString()
       itemInfoDao.queryItemById(id.toInt).map {
         case None => Ok(TransportResponse.error(500, "No Results").toJson)
         case record => Ok(TransportResponse.info(record, request.getPublicKey).toJson)

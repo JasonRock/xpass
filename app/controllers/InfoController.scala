@@ -91,7 +91,7 @@ class InfoController @Inject()(secretInfoDao: SecretInfoDao) extends Controller 
     */
   def detail = BaseAction.async {
     request => {
-      val id = request.getInfo.toString()
+      val id = (request.getInfo \ "id").get.toString()
       secretInfoDao.queryDetailById(id.toInt).map {
         case null => Ok(TransportResponse.error(500, "No Results").toJson)
         case record => Ok(TransportResponse.info(record, request.getPublicKey).toJson)
