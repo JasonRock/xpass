@@ -55,7 +55,7 @@ class SecretInfoDao @Inject()(protected val dbConfigProvider: DatabaseConfigProv
       si <- secretItems
       s <- secretInfos if s.id === si.id
       i <- itemInfos if i.id === si.id
-    } yield (s.id, s.title, i.itemName, i.itemDesc, i.securityLevel, si.itemContent)
+    } yield (s.id, s.title, i.id, i.itemName, i.itemDesc, i.securityLevel, si.itemContent)
     db.run(q.result).map(i => {
       i.map(j => {
         SecretDetail.apply _ tupled j
@@ -68,7 +68,7 @@ class SecretInfoDao @Inject()(protected val dbConfigProvider: DatabaseConfigProv
       s <- secretInfos
       i <- itemInfos
       si <- secretItems if s.id === si.secretId && i.id === si.itemId && s.id === id
-    } yield (s.id, s.title, i.itemName, i.itemDesc, i.securityLevel, si.itemContent)
+    } yield (s.id, s.title, i.id, i.itemName, i.itemDesc, i.securityLevel, si.itemContent)
     db.run(q.result) map {
       case j => j.map(jj => {
         SecretDetail.apply _ tupled jj

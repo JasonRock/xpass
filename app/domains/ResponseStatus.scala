@@ -6,12 +6,13 @@ import play.api.libs.json.{Writes, _}
 /**
   * Created by js.lee on 4/20/16.
   */
-case class SecretDetail(id: Option[Int], title: Option[String], itemName: Option[String], itemDesc: Option[String], securityLevel: Option[Int], itemContent: Option[String])
+case class SecretDetail(id: Option[Int], title: Option[String], itemId: Option[Int], itemName: Option[String], itemDesc: Option[String], securityLevel: Option[Int], itemContent: Option[String])
 
 object SecretDetail {
   implicit val reads: Reads[SecretDetail] = (
     (__ \ "id").readNullable[Int] ~
       (__ \ "title").readNullable[String] ~
+      (__ \ "itemId").readNullable[Int] ~
       (__ \ "itemName").readNullable[String] ~
       (__ \ "itemDesc").readNullable[String] ~
       (__ \ "securityLevel").readNullable[Int] ~
@@ -21,6 +22,7 @@ object SecretDetail {
   implicit lazy val writes: Writes[SecretDetail] = (
     (__ \ "id").writeNullable[Int] ~
       (__ \ "title").writeNullable[String] ~
+      (__ \ "itemId").writeNullable[Int] ~
       (__ \ "itemName").writeNullable[String] ~
       (__ \ "itemDesc").writeNullable[String] ~
       (__ \ "securityLevel").writeNullable[Int] ~
